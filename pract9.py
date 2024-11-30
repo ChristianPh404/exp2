@@ -267,12 +267,14 @@ df_dispersion = df.iloc[1:,:].std()
 min_dispersion = df_dispersion.idxmin()
 column_values = df[min_dispersion].iloc[1:]
 geom_mean = gmean(column_values)
-
+err = abs(geom_mean - k_comparacion[0]) / np.maximum(abs(geom_mean), abs(k_comparacion[0]))
 df_resultado_final = pd.DataFrame({
-    'orden de reaccion metodo integral':min_dispersion, 
+    'orden de reaccion metodo integral': min_dispersion, 
     'orden de reaccion metodo diferencial': n_comparacion,
     'k metodo integral': geom_mean,
-    'k metodo diferencial': k_comparacion
+    'k metodo diferencial': k_comparacion,
+    'error relativo': "{:.2%}".format(err)
 })
+
 pd.set_option('display.colheader_justify', 'center')
 display(df_resultado_final.to_string(index=False))
