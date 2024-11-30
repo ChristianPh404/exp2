@@ -7,21 +7,20 @@ from scipy.optimize import minimize
 from scipy.stats import linregress
 from scipy.stats import gmean
 from scipy.interpolate import CubicSpline
-import os
 
 opcion = int(input("Introduce 0 o 1, 0 si ajustas los datos en el script, 1 si va desde otro archivo: "))
 # Función para cargar datos
-def cargar_datos(opcion, archivo=None):
+def cargar_datos(opcion, similes=None):
     if opcion == 0:
         # Usar vectores definidos en el script
         t = np.array([0,44,85,127,177,227,275,323,372,426,485,536,602,664,729,800,872,940])
         h = np.array([0.245,0.235,0.225,0.215,0.205,0.195,0.185,0.175,0.165,0.155,0.145,0.135,0.125,0.115,0.105,0.095,0.085,0.075])
     elif opcion == 1:
         # Leer datos de un archivo proporcionado
-        if archivo.endswith('.txt') or archivo.endswith('.dat'):
-            datos = np.loadtxt(archivo, delimiter=',')
-        elif archivo.endswith('.xlsx'):
-            datos = pd.read_excel(archivo).to_numpy()
+        if similes.endswith('.txt') or similes.endswith('.dat'):
+            datos = np.loadtxt(similes, delimiter=',')
+        elif similes.endswith('.xlsx'):
+            similes = pd.read_excel(similes).to_numpy()
         else:
             raise ValueError("Formato de archivo no soportado. Use .txt, .dat o .xlsx")
         t = datos[:, 0]
