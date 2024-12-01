@@ -251,11 +251,14 @@ ki_transposed = ki_values.T
 column_names = [f"n_reac {n}" for n in n_integral]
 df = pd.DataFrame(ki_transposed, columns=column_names)
 display(df.to_string(index=False))
+print("\n")
 
 #excluir primera fila para cada columna y asi calcular la dispersion
 df_dispersion = df.iloc[1:,:].std()
 min_dispersion = df_dispersion.idxmin()
 column_values = df[min_dispersion].iloc[1:]
+
+
 geom_mean = gmean(column_values)
 err = abs(geom_mean - k_comparacion[0]) / np.maximum(abs(geom_mean), abs(k_comparacion[0]))
 df_resultado_final = pd.DataFrame({
