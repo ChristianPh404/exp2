@@ -100,15 +100,6 @@ plt.title('Spline con nodos centrados y adyacentes')
 plt.legend(["Datos originales", "Spline ajustado"])
 plt.show()
 
-# Graficar dh/dt
-plt.figure(figsize=(8, 5))
-plt.plot(t_resultados, dh_dt_resultados, 'o-', label="dh/dt calculado", color='blue')
-plt.xlabel('Tiempo (minutos)')
-plt.ylabel('dh/dt')
-plt.title('Derivada de la altura con respecto al tiempo')
-plt.legend()
-plt.show()
-
 # Análisis de logaritmos
 log_h = np.log(h_calculados_resultados)
 log_dh_dt = np.log(-np.array(dh_dt_resultados))  # Cambiar el signo para manejar el logaritmo
@@ -328,3 +319,13 @@ df_hfinal = pd.DataFrame({
 })
 pd.set_option('display.colheader_justify', 'center')
 display(df_hfinal.to_string(index=False))
+
+# Graficar dh/dt
+plt.figure(figsize=(8, 5))
+plt.plot(t_resultados, dh_dt_resultados, marker='o', markersize=4, linestyle='-', color='blue', label="dh/dt calculado con spiline", linewidth=0.8)
+plt.plot(t, -dh_dt2, marker='D', markersize=4, linestyle='-', color='red', label="dh/dt calculado con -k*h**n", linewidth=0.8,alpha=0.5)
+plt.xlabel('Tiempo (minutos)')
+plt.ylabel('dh/dt')
+plt.title('Derivada de la altura con respecto al tiempo')
+plt.legend()
+plt.show()
