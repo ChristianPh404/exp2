@@ -41,6 +41,10 @@ h_resultados = []
 h_calculados_resultados = []
 dh_dt_resultados = []
 dh_dt2 = []
+# Graficar los resultados
+plt.figure(figsize=(8, 5))
+plt.plot(t, h, 'o', label="Datos originales", color='black')
+
 # Para cada punto de tiempo
 for i in range(len(t)):
     # Definir ventana de nodos alrededor del punto actual
@@ -71,6 +75,11 @@ for i in range(len(t)):
     h_calculados_resultados.append(h_calculada)
     dh_dt_resultados.append(dh_dt)
     dh_dt2.append(dh_dt2_calc)
+    # Crear el spline para la ventana actual
+    cs = CubicSpline(t_nodos, h_nodos, bc_type='natural')
+    t_fine = np.linspace(min(t_nodos), max(t_nodos), 100)  # Más puntos para suavidad
+    h_fine = cs(t_fine)
+    plt.plot(t_fine, h_fine, color='orange', alpha=0.5)
 
 dh_dt_df = [f"{dh:.5f}" for dh in dh_dt_resultados]
 # Convertir las listas en un DataFrame de pandas para mostrar los resultados de forma tabular
@@ -81,29 +90,7 @@ df_resultados = pd.DataFrame({
     'dh/dt': dh_dt_df
 })
 
-# Graficar los resultados
-plt.figure(figsize=(8, 5))
-plt.plot(t, h, 'o', label="Datos originales", color='black')
 
-# Graficar el spline ajustado para cada conjunto de nodos
-n_puntos_por_nodo = 3
-for i in range(len(t)):
-    # Determinar los nodos relevantes
-    if i < n_puntos_por_nodo // 2:  # Al inicio
-        t_nodos = t[:n_puntos_por_nodo]
-        h_nodos = h[:n_puntos_por_nodo]
-    elif i >= len(t) - n_puntos_por_nodo // 2:  # Al final
-        t_nodos = t[-n_puntos_por_nodo:]
-        h_nodos = h[-n_puntos_por_nodo:]
-    else:  # Centro
-        t_nodos = t[i - n_puntos_por_nodo // 2: i + n_puntos_por_nodo // 2 + 1]
-        h_nodos = h[i - n_puntos_por_nodo // 2: i + n_puntos_por_nodo // 2 + 1]
-
-    # Crear el spline para la ventana actual
-    cs = CubicSpline(t_nodos, h_nodos, bc_type='natural')
-    t_fine = np.linspace(min(t_nodos), max(t_nodos), 100)  # Más puntos para suavidad
-    h_fine = cs(t_fine)
-    plt.plot(t_fine, h_fine, color='orange', alpha=0.5)
 
 plt.xlabel('Tiempo (minutos)')
 plt.ylabel('Altura (h)')
