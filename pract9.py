@@ -8,7 +8,9 @@ from scipy.stats import linregress
 from scipy.stats import gmean
 from scipy.interpolate import CubicSpline
 
+temp = float(input("Introduce la temperatura en grados centígrados: "))
 opcion = int(input("Introduce 0 o 1, 0 si ajustas los datos en el script, 1 si va desde otro archivo: "))
+
 # Función para cargar datos
 def cargar_datos(opcion, similes=None):
     if opcion == 0:
@@ -90,8 +92,8 @@ df_resultados = pd.DataFrame({
     'dh/dt': dh_dt_df
 })
 
-
-
+display(df_resultados.to_string(index=False))
+print("\n")
 plt.xlabel('Tiempo (minutos)')
 plt.ylabel('Altura (h)')
 plt.title('Spline con nodos centrados y adyacentes')
@@ -115,7 +117,7 @@ df_log = pd.DataFrame({
     'log(-dh/dt)': log_dh_dt
 })
 display(df_log.to_string(index=False))
-
+print("\n")
 # Ajuste lineal
 slope, intercept, r_value, p_value, std_err = linregress(log_h, log_dh_dt)
 ajuste = slope * log_h + intercept  # Línea ajustada
@@ -129,6 +131,7 @@ print("Resultados del ajuste lineal:")
 print(f"Pendiente: {slope:.3f}")
 print(f"Intercepto: {intercept:.3f}", f"Valor de k: {kexp:.3f}")
 print(f"Coeficiente de correlación (R²): {r_value**2:.3f}")
+print("\n")
 
 h_data = np.array(h_calculados_resultados)  # Altura calculada
 dh_dt_data = -np.array(dh_dt_resultados)   # Derivada calculada (cambiada de signo)
@@ -205,7 +208,8 @@ df_resultados['h_sp_total'] = calc_h_total
 df_resultados = df_resultados[df_resultados.columns[[0, 1, 2, -1, -2,-3]]]
 
 display(df_resultados.to_string(index=False))
-
+print("\n")
+print("\n")
 ''' se comprueba el error cuadratico medio para ambos modelos
 y se selecciona el que tenga menor error para compararlo con el 
 metodo integral '''
@@ -264,3 +268,60 @@ df_resultado_final = pd.DataFrame({
 
 pd.set_option('display.colheader_justify', 'center')
 display(df_resultado_final.to_string(index=False))
+
+#calculo reynolds 
+v = 1.19e-4-5.90e-6*temp+8.81e-8*temp**2
+
+def calculo_dt(h):
+    if n_comparacion == 0:
+        dt = 0.073*h**0.5
+    elif n_comparacion == 0.5:
+        dt = 0.054*h**0.25
+    elif n_comparacion == 1.5:
+        dt = 0.0198*h**(-0.25)
+    elif n_comparacion == 2:
+        dt = 0.0098*h**(-0.5)
+    return dt
+dhdt2 = -k_comparacion[0] * h**n_comparacion
+if n_comparacion != 0:
+    hreynold = (dh_dt_data / k_comparacion[0]) ** (1 / n_comparacion)
+    hreynold2 = (dhdt2 / k_comparacion[0]) ** (1 / n_comparacion)
+else:
+    hreynold = np.where((x != 0) & (t != 0),((1 - (1 - x)) / (k_comparacion[0] * t)) ** (-1),0)
+
+reynolds =dh_dt_data*calculo_dt(h)/v
+reynolds2 = -dhdt2*calculo_dt(h)/v
+media_reynolds = gmean(reynolds[1:])
+media_reynolds2 = gmean(reynolds2[1:])
+print("\n")
+print(f"la viscosidad para la temperatura {temp} es: {v:.3e} m^2/s")
+print(f"El valor de reynolds para dhdt con spilines es: {media_reynolds:.5f}")
+print(f"El valor de reynolds para dhdt = -k*h**n: {media_reynolds2:.5f}")
+print("\n")
+error_h = abs(h-hreynold)/np.maximum(h,hreynold)
+error_h2 = abs(h-hreynold2)/np.maximum(h,hreynold2)
+
+print(f"la h diff sera para el metodo diferencial salvo si el orden de reaccion es 0")
+print(f"la h mixta usa el calculo de dhdt de la misma forma que para el segundo valor del reynolds")
+print("\n")
+
+def hintegral(h):
+    if n_comparacion != 1:
+        hintegral = np.where((t != 0), h[0] * ((1 - k_comparacion[0] * t * (1 - n_comparacion) * h[0]**(n_comparacion - 1))**(1 / (1 - n_comparacion))),h[0])
+    else:
+        hintegral = np.where((t != 0), ((np.exp(t * k_comparacion[0]) + 1) * h[0] - h[0]), h[0])
+    return hintegral
+hintegral_result = hintegral(h)
+error_hintegral = abs(h-hintegral_result)/np.maximum(h,hintegral_result)
+df_hfinal = pd.DataFrame({
+    'h   ': h,
+    'h diff   ': [f"{e:.3f}" for e in hreynold],
+    'h integral   ': [f"{e:.3f}" for e in hintegral_result],
+    'h mixta   ': [f"{e:.3f}" for e in hreynold2],
+    'error relativo diff   ': [f"{e:.2%}" for e in error_h],
+    'error relativo integral   ': [f"{e:.2%}" for e in error_hintegral],
+    'error relativo mixta   ': [f"{e:.2e}%" for e in error_h2],
+    'dt': [f"{e:.4f}" for e in calculo_dt(h)]
+})
+pd.set_option('display.colheader_justify', 'center')
+display(df_hfinal.to_string(index=False))
